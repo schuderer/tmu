@@ -40,6 +40,8 @@ class ClauseBank():
 			self.dim = (X.shape[1], X.shape[2], 1)
 		elif len(X.shape) == 4:
 			self.dim = (X.shape[1], X.shape[2], X.shape[3])
+		else:
+			raise ValueError(f"Unsupported shape {X.shape}")
 
 		if self.patch_dim == None:
 			self.patch_dim = (self.dim[0]*self.dim[1]*self.dim[2], 1)

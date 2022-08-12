@@ -1235,9 +1235,11 @@ class TMRegressor(TMBasis):
 	def __init__(self, number_of_clauses, T, s, platform='CPU', patch_dim=None, feature_negation=True, boost_true_positive_feedback=1, max_included_literals=None, number_of_state_bits_ta=8, weighted_clauses=False, clause_drop_p = 0.0, literal_drop_p = 0.0):
 		super().__init__(number_of_clauses, T, s, platform=platform, patch_dim=patch_dim, feature_negation=feature_negation, boost_true_positive_feedback=boost_true_positive_feedback, max_included_literals=max_included_literals, number_of_state_bits_ta=number_of_state_bits_ta, weighted_clauses=weighted_clauses, clause_drop_p = clause_drop_p, literal_drop_p = literal_drop_p)
 
-	def initialize(self, X, Y):
-		self.max_y = np.max(Y)
-		self.min_y = np.min(Y)
+	def initialize(self, X, Y=None, max_y=None, min_y=None):
+		if Y is None and (max_y is None or min_y is None):
+			raise ValueError("Please specify Y or min_y/max_y.")
+		self.max_y = np.max(Y) if max_y is None else max_y
+		self.min_y = np.min(Y) if min_y is None else min_y
 
 		if self.platform == 'CPU':
 			self.clause_bank = ClauseBank(X, self.number_of_clauses, self.number_of_state_bits_ta, self.number_of_state_bits_ind, self.patch_dim)
@@ -1245,10 +1247,10 @@ class TMRegressor(TMBasis):
 			from tmu.clause_bank_cuda import ClauseBankCUDA
 			self.clause_bank = ClauseBankCUDA(X, self.number_of_clauses, self.number_of_state_bits_ta, self.patch_dim)
 		else:
-			print("Unknown Platform")
-			sys.exit(-1)
-			
+			raise ValueError(f"Unknown platform {self.platform}. Please specify CPU or CUDA")
+
 		self.weight_bank = WeightBank(np.ones(self.number_of_clauses).astype(np.int32))
+		self.initialized = True
 
 		if self.max_included_literals == None:
 			self.max_included_literals = self.clause_bank.number_of_literals
